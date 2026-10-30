@@ -1,0 +1,306 @@
+ROUTE20LAB 1.0 - ETUDE ROUTIERE ET ENTRETIEN
+=========================================
+
+Application pédagogique en français : trafic, plate-forme, eau, structure et
+entretien d'une route communautaire avec un objectif de service de 20 ans minimum.
+Une route peut comporter plusieurs tronçons sans chevauchement.
+Les contrôles comparent des données déclarées aux critères du projet.
+Ils ne calculent ni durée de vie mécanique ni conformité réglementaire.
+
+Le dossier livré contient exactement :
+  app.py             fonctions, interface, HTML/CSS, dessins et exports
+  requirement.text   dépendances demandées par l'utilisateur
+  README             présent document
+Tests, captures, archives et données sont hors du dossier livré.
+
+1. INSTALLATION SOUS WINDOWS
+---------------------------
+Python 3.12 à 3.14 conseillé ; version utilisée : Python 3.14, Streamlit 1.65.
+Ouvrir ce dossier dans VS Code puis Terminal > Nouveau terminal :
+
+  python -m pip install -r requirement.text
+  python -m streamlit run app.py
+
+L'adresse locale indiquée dans le terminal s'ouvre dans le navigateur.
+Pour retrouver aussi le thème natif utilisé lors de la livraison :
+
+  python -m streamlit run app.py --theme.base light --theme.primaryColor "#087F83" --theme.backgroundColor "#F3F4EC" --theme.secondaryBackgroundColor "#E4EAE0" --theme.textColor "#172326" --theme.sidebar.backgroundColor "#172326" --theme.sidebar.secondaryBackgroundColor "#283A3D" --theme.sidebar.textColor "#F2F5EA"
+
+Bibliothèques :
+  streamlit : interface, navigation, formulaires et téléchargements
+  numpy : calculs vectorisés et simulations reproductibles
+  pandas : tableaux, statistiques, CSV et Excel
+  plotly : coupe interactive, trafic, drainage, simulations et finances
+  openpyxl : lecture/écriture Excel
+  reportlab : rapport PDF avec police embarquée et pagination
+sqlite3, json, pathlib, datetime, etc. sont inclus dans Python.
+Les intervalles de versions ne verrouillent pas toutes les dépendances transitives.
+
+2. PARCOURS DE DEMARRAGE
+-----------------------
+L'accueil est direct, sans connexion. Le registre réel est initialement vide.
+Charger l'exemple fictif permet de parcourir un espace séparé de démonstration.
+Revenir à mes routes retrouve les données réellement enregistrées.
+L'exemple est conservé uniquement dans la session, pas dans la base réelle.
+Une nouvelle session permet de réinitialiser l'exemple.
+
+Rubriques :
+  Vue d'ensemble : indicateurs, coupe, quatre modules de contrôle et cartes.
+  Routes et tronçons : créer/ouvrir/dupliquer/supprimer une route, définir les PK.
+  Trafic : comptage, croissance, part de voie, cumul et essieux si CAM documenté.
+  Plate-forme et CBR : essais individuels, point faible, CSV/Excel.
+  Eau et drainage : pentes, fossés, exutoires, buses et indicateur hydraulique.
+  Structure : largeurs, matériaux, épaisseurs et références d'études.
+  Simulations : Monte-Carlo sur le flux initial et le taux de croissance.
+  Entretien : observations, priorités, calendrier et réalisations.
+  Rapports et méthode : exports, sauvegarde, restauration, critères et sources.
+
+Chaque formulaire doit être enregistré pour modifier le projet.
+Les paramètres initiaux d'un projet réel sont des propositions, pas des mesures.
+Les sources vides donnent des contrôles « À renseigner », pas des validations.
+Le résultat d'une route ne se généralise pas automatiquement à tous ses tronçons.
+Le tableau de bord et les exports concernent le tronçon actif.
+Les cumuls de tronçons ne sont jamais additionnés : les mêmes camions peuvent
+traverser plusieurs tronçons et seraient alors comptés plusieurs fois.
+
+3. ORIGINE DES VALEURS ET AMBIGUITES
+----------------------------------
+Consignes de l'utilisateur : horizon >=20 ans ; CBR >15 ; pente droite 2,5 % ;
+dévers 3 à 7 % ; accotements 3 à 4 % ; fossé trapézoïdal, fond >=0,50 m,
+profondeur 0,50 à 0,70 m, pente longitudinale 0,5 à 2 % ; exutoires au plus
+tous les 200 m ; buses de diamètre intérieur >=1000 mm espacées au plus de 250 m.
+La valeur 200 m et le dérasement des accotements ont été confirmés par l'utilisateur.
+
+Les critères sont modifiables dans Rapports > Critères du projet, avec leur origine.
+Ils sont des critères pédagogiques, pas une norme camerounaise affirmée.
+La valeur 3-4 % est interprétée comme une pente TOTALE, et non comme 3-4 points
+ajoutés à celle de la chaussée. Cette interprétation doit être confirmée pour
+chaque tronçon réel via la case correspondante ; elle est explicitement fictive
+dans l'exemple. Tolérance transversale initiale : 0 point, modifiable et déclarée.
+En courbe, seul le dévers est comparé ; en alignement droit, les deux pentes.
+
+La coupe fournie montre : roulement 6 cm, base 20 cm, fondation 25 cm, forme 30 cm.
+Ce sont des exemples de référence, sans validation des matériaux ni dimensionnement.
+La figure indique une chaussée de 7 m et deux accotements de 1,5 m : somme 10 m,
+mais sa note affiche 12 m. La version réelle initiale garde 12 m comme déclaration
+à réconcilier. L'exemple fictif choisit explicitement 10 m, sans modifier la source.
+Fond de fossé : l'image donne 0,40 m, le texte 0,50 m ; le critère retenu est 0,50 m.
+Un fond trop étroit apparaît en écart lorsque la source du relevé est renseignée.
+La coupe utilise des échelles différentes selon les axes. Les fossés sont
+illustratifs ; la forme de chaussée n'est pas un modèle mécanique multicouche.
+Le repérage longitudinal affiche des positions régulières théoriques hors
+extrémités, pas une implantation fondée sur le relief ni un nombre d'ouvrages requis.
+
+4. TRAFIC ET PROBABILITES
+------------------------
+Comptage quotidien avant part de voie :
+  mode quotidien : valeur PL/jour saisie
+  mode fréquence : (60 / intervalle en minutes) x heures de circulation
+Flux sur la voie = comptage quotidien x part de voie / 100.
+La part n'est appliquée qu'une seule fois. Une valeur 100 % peut désigner un
+comptage déjà effectué sur la voie de calcul. Il faut préciser sens et voie
+dans la source. Tous les jours ne sont pas forcément des jours de circulation.
+
+Cumul N = flux sur la voie x jours/an x facteur de cumul.
+  sans croissance : facteur = n
+  linéaire : n + g*n*(n-1)/2
+  géométrique : somme (1+g)^k, k=0,...,n-1 ; si g=0, facteur=n
+g est en fraction (2 % ->0,02). La première année est au flux initial.
+Le choix de loi doit être cohérent avec le catalogue consulté ; aucun catalogue
+de dimensionnement n'est appliqué automatiquement.
+
+0,2 à 0,5 million de PL =200000 à500000 passages, pas des millions de tonnes.
+Cette plage évoque TC2 dans un référentiel particulier : l'application conserve
+une plage pédagogique et un plafond, sans classer officiellement la route.
+Un trafic sous la borne basse n'est pas un défaut. Seul le dépassement strict
+du plafond déclenche l'écart de cumul. Les conventions de classe restent à préciser.
+Masse cumulée indicative = N x masse moyenne ; ce n'est pas une capacité admissible.
+Essieux équivalents = N x CAM uniquement si un CAM documenté est saisi.
+La masse totale du camion ne donne pas la distribution des charges par essieu.
+
+Monte-Carlo : flux initial et croissance indépendants, chacun triangulaire
+minimum/mode/maximum. Une valeur constante est permise lorsque les trois sont égales.
+Le flux est saisi AVANT répartition, avec la même part de voie que le trafic nominal.
+Dans un scénario, son flux et son taux sont conservés sur tout l'horizon.
+Nombre de jours/an et modèle sont ceux enregistrés dans Trafic.
+Sans croissance : les bornes de taux sont ignorées. Les cumuls projetés peuvent
+être décimaux : ce sont des expositions moyennes, pas des comptages observés.
+1000 à100000 tirages ; graine fixe ; seuil strict cumul >plafond.
+P05/P50/P95, histogramme, fréquence de dépassement et intervalle Wilson 95 %.
+Wilson mesure l'erreur d'échantillonnage des tirages, pas l'incertitude du modèle.
+Année de premier dépassement =0 dans CSV si le plafond n'est jamais franchi
+dans l'horizon. Ce n'est ni une rupture à l'année0 ni une durée de vie restante.
+La sensibilité complémentaire fait varier les MOYENNES des lois : flux +/-10 %,
+croissance +1 point (bornée à15 %). Ce calcul n'est pas une médiane simulée.
+Les hypothèses affichées sont celles du dernier lancement. Modifier un champ
+sans relancer ne remplace pas les résultats. Une modification du projet enregistré
+invalide les anciens résultats. Cache limité à6 entrées /30 minutes.
+
+5. SOL, STRUCTURE ET HYDRAULIQUE
+-------------------------------
+CBR : minimum des essais observés, comparaison STRICTE au seuil du projet.
+Un CBR égal à15 ne satisfait pas >15. Date, source et conditions sont conservées.
+Des conditions différentes ne sont pas automatiquement rendues comparables.
+Le logiciel ne prédit pas la portance des zones sans essai.
+Import atomique CSV/Excel : colonnes pk,cbr,condition,date,source ; dates AAAA-MM-JJ.
+PK compris dans le tronçon ; 1 à200 essais ; fichier <=2 Mo ; tous champs requis.
+Modèle CSV fourni, séparateur point-virgule et décimales virgule.
+Un import remplace la série du tronçon après validation et confirmation explicite.
+
+Structure : comparaison épaisseur mesurée >=référence, pour les quatre couches.
+Matériaux saisis et références de contrôles sont conservés, pas expertisés.
+Plus épais ne prouve pas la qualité. Aucune fatigue, déformation, adhérence,
+tenue à l'eau, qualité du bitume ni résistance mécanique n'est calculée.
+Les trois références d'études (hydraulique, dimensionnement, contrôles matériaux)
+restent « À renseigner » si absentes. Leur présence n'est pas une certification.
+
+Indicateur du fossé trapézoïdal, Manning en écoulement uniforme :
+  A=(b+z*y)*y ; P=b+2*y*sqrt(1+z^2) ; Rh=A/P
+  Q=(1/n)*A*Rh^(2/3)*sqrt(I)
+b=largeur fond m ; y=hauteur d'eau m ; z=talus horizontal/vertical ; I=pente en fraction.
+La hauteur d'eau est bornée par la profondeur du fossé. La rugosité est hypothétique.
+La comparaison au débit demandé n'existe que si celui-ci est >0.
+Pas de calcul pluie-débit, de remous, d'érosion, de garde libre minimale, ni de
+capacité des buses. Diamètre et espacement seuls ne vérifient pas le drainage.
+Pour mesurer une pente : dénivelé /distance horizontale x100.
+2,5 % sur2 m=5 cm. Une bouteille roulante n'est pas un instrument de mesure.
+
+6. ENTRETIEN ET REALISATIONS
+---------------------------
+Hypothèses initiales : réparer les nids-de-poule au seuil de2 cm après inspection ;
+curage fossés/buses deux fois par an ; débroussaillage annuel sur1,5 m par côté ;
+inspection du revêtement tous les7 ans pour examiner l'opportunité d'un enduit.
+Les mois3 et10 sont de simples dates initiales à adapter aux saisons du lieu.
+L'enduit n'est pas automatiquement prescrit à7 ans ni facturé sans décision.
+Le dérasement est conseillé quand les accotements font obstacle à l'eau.
+Les anomalies du diagnostic doivent être traitées en parallèle : l'entretien
+ne devient pas inutile parce qu'un critère du projet n'est pas satisfait.
+Coûts de campagne à0 =non chiffrés. Seuls curage et débroussaillage ont un coût
+prévu paramétré ; les réparations et renouvellements ne sont pas chiffrés par défaut.
+Chaque réalisation peut être corrigée, avec date, note et coût total déclaré.
+Pas de date future pour une réalisation ; coût positif seulement si réalisée.
+Le graphique utilise l'année prévue pour le prévisionnel et l'année réelle
+pour le constaté ; pas de facturation ni de transfert financier.
+Après changement de calendrier, les réalisations hors rendez-vous restent
+dans l'historique complet, le graphe de dépenses, Excel et la sauvegarde.
+
+7. TESTS A REFAIRE DANS L'EXEMPLE FICTIF
+-------------------------------------
+L'exemple propose tous les contrôles géométriques satisfaits, mais trois études
+non référencées : aucun résultat ne promet une tenue réelle de20 ans.
+
+A. Trafic : intervalle30 min,24 h/j,365 j/an,part100 %,sans croissance,20 ans.
+   Attendu48 PL/j et350400 PL. Passer à14 h/j ->204400 PL. Revenir à24 h.
+   Part50 % ->175200 PL ; inférieur àla plage, sans écart de plafond.
+   En mode quotidien :48 PL/j,20 ans,2 % géométrique ->425689,9189 PL environ.
+B. CBR : ajouter un essai à15 avec une référence fictive ->écart strict.
+   Corriger à16 ->critère minimal satisfait si tous les autres sont >15.
+C. Drainage : fond0,40 m ->écart ; remettre0,50 m. Buse900 mm ->écart.
+   Exutoires300 m ->écart ; remettre200. Les états obstrués déclenchent un écart.
+D. Fossé indicatif : b0,5 m ; z0,5 ; y0,4 m ; n0,015 ; pente1 %.
+   A=0,280 m² ; Q=0,640091 m³/s environ. Aucun calcul de buse n'en est déduit.
+E. Structure :7+1,5+1,5=10 m ; déclarer12 m ->écart, revenir à10.
+   Roulement5 cm pour référence6 ->écart ; remettre6.
+F. Simulation : flux48/48/48,croissance0/0/0,1000 tirages,graine42,
+   sans croissance : tous les cumuls350400 ;0 dépassement du plafond500000.
+   Passer le plafond à300000 puis relancer :100 % de dépassements,
+   premier dépassement en année18 (48*365*17=297840 ; année18=315360).
+   Revenir à500000. Même graine et mêmes hypothèses ->tirages identiques.
+G. Entretien : nid-de-poule2 cm et accotement bloqué ->deux priorités proposées.
+   Mise en service01/01/2026,20 ans,mois3 et10 :40 curages,20 débroussaillages,
+   2 revues à7 et14 ans,soit62 rendez-vous. Coûts10000/curage et5000/débroussaillage
+   ->25000 FCFA/an prévu,500000 FCFA sur20 ans, hors interventions non chiffrées.
+H. Exports : PDF lisible ; Excel6 onglets ; CSVUTF-8 ; JSON restauré comme copies.
+   Une sauvegarde fictive est refusée dans l'espace réel. Limite20 routes.
+I. Erreurs : route sans nom,PKfin<=PKdébut,tronçons superposés,
+   bornes triangulaires inversées,date CBRinvalide,hauteur d'eau>profondeur,
+   deux mois de curage identiques : message sans enregistrer partiellement.
+
+8. SAUVEGARDE ET STOCKAGE
+------------------------
+Base réelle par défaut sous Windows :
+  C:\Users\<utilisateur>\Documents\Codex\data\route20lab\route20lab.sqlite3
+Variable optionnelle ROUTE20LAB_DATA_DIR pour un autre dossier hors du dossier livré.
+20 routes,20 tronçons/route,200 essais/tronçon,300 réalisations/tronçon ;8 Mo maximum.
+Le registre vérifie un numéro de révision pour éviter l'écrasement entre onglets.
+En cas de conflit : Recharger le registre, puis refaire la modification.
+Sauvegarde complète JSON : toutes les routes de l'espace actif.
+Restauration additive, nouveaux IDs de routes et tronçons, rien n'est supprimé.
+Une sauvegarde fictive ne se restaure que dans l'espace fictif.
+Le JSON d'hypothèses de simulation n'est pas une sauvegarde de registre.
+Les exports PDF/Excel concernent le tronçon actif ; Excel contient aussi toutes
+ses réalisations, y compris celles hors calendrier actuel.
+Pas de compte : un registre hébergé est commun aux visiteurs du serveur.
+Le disque Streamlit Cloud n'est pas un stockage durable garanti ; garder les JSON.
+Pas de secrets, de géolocalisation automatique, de cléAPI ni de service payant.
+
+9. GITHUB ET STREAMLIT COMMUNITY CLOUD
+------------------------------------
+Conserver requirement.text dans le dossier livré. Community Cloud attend le nom
+standard requirements.txt. Préparer une COPIE SEPAREE pour le déploiement :
+  app.py
+  requirements.txt   (copie de requirement.text)
+  README
+Ne pas publier de base SQLite ni de données personnelles de chantier.
+Dans la copie :
+  Copy-Item -LiteralPath requirement.text -Destination requirements.txt
+Le fichier requirement.text peut être retiré de cette copie seulement si souhaité.
+
+Créer par exemple le dépôt route20lab sur votre compte GitHub.
+Via le site : Add file >Upload files ; charger les trois fichiers, puis commit.
+Via VSCode/Git dans le dossier de déploiement :
+  git init
+  git add app.py requirements.txt README
+  git commit -m "Premiere version de Route20Lab"
+  git branch -M main
+  git remote add origin https://github.com/VOTRE_COMPTE/route20lab.git
+  git push -u origin main
+Si origin existe, contrôler git remote -v puis corriger si nécessaire avec :
+  git remote set-url origin https://github.com/VOTRE_COMPTE/route20lab.git
+
+Cloud : Create app ; choisir le dépôt,branche main,fichier principal app.py.
+Dans PasteURL,fournir le lien du fichier :
+  https://github.com/VOTRE_COMPTE/route20lab/blob/main/app.py
+Choisir une version Python compatible proposée, puis déployer et vérifier les logs.
+Partager l'URL publique .streamlit.app, jamais localhost.
+Pour une mise àjour :
+  git status
+  git add app.py requirements.txt README
+  git commit -m "Amelioration de Route20Lab"
+  git push
+Ces commandes sont une procédure ; aucun dépôt distant n'est créé automatiquement.
+
+10. REFERENCES ET VERIFICATIONS
+-------------------------------
+La coupe et les consignes transmises par l'utilisateur sont la source des seuils.
+Références générales consultées le30/10/2026 (pas une adoption de normes étrangères) :
+  https://construction-moderne.infociments.fr/route/dimensionnement-des-voiries-et-amenagements-urbains-en-beton?page=1
+  https://www.fhwa.dot.gov/engineering/hydraulics/culverthyd/culvert.cfm
+  https://road-asset.piarc.org/en/data-and-modeling-lifecycle-planning/lifecycle-planning
+  https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/app-dependencies
+
+Vérifications réellement effectuées le 30/10/2026 :
+  - installation des dépendances et lancement local sur le port 8542 ;
+  - 23 tests automatisés réussis : trafic et croissance, CBR strict,
+    drainage, Manning, Monte-Carlo, entretien, persistance et exports ;
+  - parcours interactif complet dans Microsoft Edge aux largeurs 1440 et 320 px :
+    formulaires, corrections, import CBR, deux tronçons, simulations à 100000
+    tirages, réalisation d'entretien, téléchargements et restauration additive ;
+  - contrôle des neuf rubriques aux largeurs 768 et 390 px ;
+  - vérification de l'absence d'erreurs, de débordement horizontal de la page
+    et de texte coupé dans les titres, indicateurs et boutons contrôlés ;
+  - vérification des fichiers réellement téléchargés : CSV de 100000 tirages,
+    classeur à six feuilles, sauvegarde complète, calendrier et rapport PDF ;
+  - PDF de quatre pages rendu en images et inspecté visuellement : tableaux,
+    accents, pagination et marges lisibles, sans chevauchement constaté ;
+  - contrôle de l'isolation de l'exemple fictif : registre réel resté vide.
+
+Exemple de vérification des exports après le parcours de test : deux essais
+CBR 18 et 20, trafic fixe de 350400 PL, 62 rendez-vous, entretien prévu de
+500000 FCFA sur 20 ans et une réalisation constatée de 12500 FCFA.
+Ces données sont fictives et ne sont pas préchargées dans le registre réel.
+
+Restent à réaliser : déploiement sur Community Cloud, essai sur de vrais
+appareils tactiles (les tailles mobiles ont été contrôlées dans un navigateur),
+et confrontation aux mesures et études d'une route réelle. Les intervalles
+de dépendances autorisent d'autres versions ; elles n'ont pas toutes été testées.
